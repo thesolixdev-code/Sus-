@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="es" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User And Join | Roblox Live Session & Game Joiner</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        neon: {
+                            DEFAULT: '#00FF87',
+                            500: '#00FF87',
+                            600: '#10B981',
+                            700: '#059669',
+                            glow: 'rgba(0, 255, 135, 0.25)',
+                        },
+                        darkbg: '#080C0E',
+                        surface: '#111820',
+                        surfaceCard: '#16202C',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    },
+                    boxShadow: {
+                        'neon-glow': '0 0 25px rgba(0, 255, 135, 0.35)',
+                        'neon-btn': '0 0 18px rgba(0, 255, 135, 0.45)',
+                        'card-glow': '0 8px 32px 0 rgba(0, 255, 135, 0.08)',
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #080C0E;
+            color: #F3F4F6;
+            overflow-x: hidden;
+        }
+
+        /* Ambient Background Grid Pattern */
+        .bg-grid-pattern {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        }
+
+        /* Glassmorphism utility */
+        .glass-panel {
+            background: rgba(22, 32, 44, 0.7);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(0, 255, 135, 0.12);
+        }
+
+        .glass-input {
+            background: rgba(11, 16, 22, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-input:focus {
+            border-color: #00FF87;
+            box-shadow: 0 0 15px rgba(0, 255, 135, 0.25);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #080C0E;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #1F2937;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #00FF87;
+        }
+
+        /* Pulse Animations */
+        @keyframes radar-ping {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 0.4; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .animate-radar {
+            animation: radar-ping 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between bg-grid-pattern relative text-gray-100 selection:bg-neon-500 selection:text-black">
+
+    <!-- Ambient Glowing Light Orbs -->
+    <div class="fixed -top-40 -left-40 w-96 h-96 bg-neon-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="fixed top-1/3 -right-40 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="fixed -bottom-40 left-1/3 w-96 h-96 bg-neon-500/5 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col space-y-3 pointer-events-none"></div>
+
+    <!-- Header / Navbar -->
+    <header class="w-full border-b border-emerald-500/10 glass-panel sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            
+            <!-- Brand Logo & Title -->
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                <div class="relative flex items-center justify-center p-2 rounded-xl bg-surface border border-emerald-500/30 shadow-neon-glow">
+                    <!-- SVG Logo: Multiple stylized avatars in green -->
+                    <svg class="w-8 h-8 text-neon-500 filter drop-shadow-[0_0_8px_rgba(0,255,135,0.8)]" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" opacity="0.95"/>
+                        <path d="M6.5 8c1.38 0 2.5-1.12 2.5-2.5S7.88 3 6.5 3 4 4.12 4 5.5 5.12 8 6.5 8zm0 1.5c-1.8 0-5.37.9-5.37 2.7V14h3.7c.36-.84.97-1.57 1.8-2.12-.11-.12-.13-.26-.13-.38v-2z" opacity="0.6"/>
+                        <path d="M17.5 8c1.38 0 2.5-1.12 2.5-2.5S18.88 3 17.5 3 15 4.12 15 5.5s1.12 2.5 2.5 2.5zm0 1.5c.13 0 .15.26.13.38.83.55 1.44 1.28 1.8 2.12h3.7v-1.8c0-1.8-3.57-2.7-5.37-2.7z" opacity="0.6"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-black text-xl tracking-tight text-white">USER <span class="text-neon-500">AND JOIN</span></span>
+                        <span class="text-[10px] uppercase tracking-wider font-semibold px-2 py-0.5 rounded-full bg-emerald-950 text-neon-500 border border-emerald-500/30">Live v2.4</span>
+                    </div>
+                    <p class="text-xs text-gray-400">Roblox Live Session & Server Finder</p>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-6 text-sm font-medium">
+                <a href="#search-section" class="text-gray-300 hover:text-neon-500 transition-colors">Search</a>
+                <a href="#how-it-works" class="text-gray-300 hover:text-neon-500 transition-colors">How it Works</a>
+                <a href="#privacy-guide" class="text-gray-300 hover:text-neon-500 transition-colors">Privacy Guide</a>
+                <a href="https://www.roblox.com" target="_blank" rel="noopener" class="text-xs px-3 py-1.5 rounded-lg border border-gray-700 hover:border-emerald-500/50 hover:text-white transition-all">Official Roblox ↗</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-grow max-w-5xl w-full mx-auto px-4 sm:px-6 py-10 space-y-12">
+
+        <!-- Hero & Search Section -->
+        <section id="search-section" class="text-center space-y-6 pt-4">
+            
+            <div class="inline-flex items-center space-x-2 px-3 py-1.5 rounded-full glass-panel border-emerald-500/20 text-xs text-emerald-400 font-medium">
+                <span class="w-2 h-2 rounded-full bg-neon-500 animate-ping"></span>
+                <span>Direct Game Server Launcher for Roblox</span>
+            </div>
+
+            <h1 class="text-4xl sm:text-5xl md:text-6xl font-black text-white tracking-tight leading-none">
+                Join Any Friend <br class="hidden sm:inline" />
+                <span class="bg-clip-text text-transparent bg-gradient-to-r from-neon-500 via-emerald-400 to-teal-300">
+                    Instantly In-Game
+                </span>
+            </h1>
+
+            <p class="max-w-2xl mx-auto text-gray-400 text-sm sm:text-base font-normal">
+                Enter any Roblox username or User ID below to detect real-time playing status, identify the active game server, and generate a direct launch link.
+            </p>
+
+            <!-- Search Box Form -->
+            <div class="max-w-2xl mx-auto mt-8">
+                <div class="relative group">
+                    <div class="absolute -inset-1 bg-gradient-to-r from-neon-500 to-teal-500 rounded-3xl blur opacity-25 group-hover:opacity-60 transition duration-500"></div>
+                    
+                    <div class="relative flex flex-col sm:flex-row items-center glass-panel p-2.5 sm:p-3 rounded-2xl sm:rounded-full space-y-3 sm:space-y-0 sm:space-x-3">
+                        
+                        <!-- Search Icon -->
+                        <div class="hidden sm:flex pl-3 text-emerald-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
+
+                        <!-- Text Input -->
+                        <div class="relative w-full">
+                            <input 
+                                type="text" 
+                                id="username-input" 
+                                placeholder="Enter Roblox Username or User ID..." 
+                                class="w-full bg-transparent text-white placeholder-gray-500 text-base font-medium focus:outline-none px-4 sm:px-1 py-2"
+                                autocomplete="off"
+                                spellcheck="false"
+                            >
+                            <button id="clear-btn" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+
+                        <!-- Action Button -->
+                        <button 
+                            id="join-btn" 
+                            onclick="handleSearch()" 
+                            class="w-full sm:w-auto px-8 py-3.5 rounded-xl sm:rounded-full bg-neon-500 hover:bg-emerald-400 text-black font-extrabold text-sm sm:text-base tracking-wide shadow-neon-btn hover:scale-105 active:scale-95 transition-all duration-200 flex items-center justify-center space-x-2 whitespace-nowrap"
+                        >
+                            <span>JOIN USER</span>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Searches Chips -->
+                <div id="recent-searches-container" class="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-gray-400">
+                    <span class="text-gray-500">Recents:</span>
+                    <div id="recent-chips" class="flex flex-wrap gap-2"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Dynamic Results Display Section -->
+        <section id="results-wrapper" class="min-h-[220px] transition-all duration-300">
+            
+            <!-- Default Placeholder State -->
+            <div id="state-idle" class="glass-panel rounded-3xl p-8 text-center border-dashed border-gray-800 flex flex-col items-center justify-center space-y-3">
+                <div class="w-16 h-16 rounded-2xl bg-surface flex items-center justify-center text-emerald-500/40">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122"/>
+                    </svg>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-300">Awaiting Target Username</h3>
+                <p class="text-xs text-gray-500 max-w-sm">Type a valid Roblox user handle above and click 'JOIN USER' to start real-time telemetry search.</p>
+            </div>
+
+            <!-- Loader State -->
+            <div id="state-loading" class="hidden glass-panel rounded-3xl p-12 text-center flex flex-col items-center justify-center space-y-4">
+                <div class="relative w-20 h-20 flex items-center justify-center">
+                    <div class="absolute inset-0 rounded-full border-4 border-emerald-500/20"></div>
+                    <div class="absolute inset-0 rounded-full border-4 border-neon-500 border-t-transparent animate-spin"></div>
+                    <svg class="w-8 h-8 text-neon-500 animate-pulse" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2a10 10 0 100 20 10 10 0 000-20zm0 18a8 8 0 110-16 8 8 0 010 16z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h4 class="text-base font-bold text-white tracking-wide">Querying Roblox APIs...</h4>
+                    <p class="text-xs text-emerald-400 mt-1 animate-pulse">Checking public servers & session presence</p>
+                </div>
+            </div>
+
+            <!-- Success / Target Found State -->
+            <div id="state-result" class="hidden glass-panel rounded-3xl p-6 sm:p-8 relative overflow-hidden transition-all duration-300">
+                <div id="status-glow-bar" class="absolute top-0 left-0 right-0 h-1.5 bg-neon-500 shadow-neon-glow"></div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                    
+                    <!-- Left Column: User Profile Info -->
+                    <div class="lg:col-span-5 flex flex-col items-center lg:items-start text-center lg:text-left space-y-4 border-b lg:border-b-0 lg:border-r border-gray-800/80 pb-6 lg:pb-0 lg:pr-8">
+                        <div class="relative">
+                            <img id="res-avatar" src="" alt="Roblox Avatar" class="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl bg-surface border-2 border-emerald-500/30 object-cover shadow-lg">
+                            <span id="res-status-dot" class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-surface bg-gray-500" title="Status Indicator"></span>
+                        </div>
+
+                        <div>
+                            <div class="flex items-center justify-center lg:justify-start space-x-2">
+                                <h3 id="res-displayname" class="text-2xl font-bold text-white tracking-tight">DisplayName</h3>
+                                <span id="res-verified-badge" class="hidden text-blue-400" title="Verified Roblox Account">
+                                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
+                                </span>
+                            </div>
+                            <p id="res-username" class="text-sm font-medium text-gray-400">@username</p>
+                            <p id="res-userid" class="text-xs text-emerald-400/80 font-mono mt-1">ID: 00000000</p>
+                        </div>
+
+                        <!-- Status Badge -->
+                        <div id="res-presence-badge" class="px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider inline-flex items-center space-x-1.5 bg-gray-800 text-gray-300">
+                            <span class="w-2 h-2 rounded-full bg-gray-400"></span>
+                            <span>OFFLINE</span>
+                        </div>
+
+                        <a id="res-profile-link" href="#" target="_blank" rel="noopener" class="text-xs text-gray-400 hover:text-neon-500 underline flex items-center space-x-1">
+                            <span>View Full Profile on Roblox</span>
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                        </a>
+                    </div>
+
+                    <!-- Right Column: Game Details & Direct Join Action -->
+                    <div class="lg:col-span-7 flex flex-col justify-between space-y-6">
+                        
+                        <!-- Case A: User IS Playing -->
+                        <div id="game-details-active" class="space-y-5">
+                            <div class="p-4 rounded-2xl bg-surface/80 border border-emerald-500/20 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Active Game Session</span>
+                                    <span class="text-[11px] px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 font-mono">Live Telemetry</span>
+                                </div>
+                                <div>
+                                    <h4 id="res-gamename" class="text-xl font-bold text-white">Roblox Experience</h4>
+                                    <p id="res-placeid" class="text-xs text-gray-400 font-mono mt-0.5">Place ID: --</p>
+                                </div>
+                                <div id="res-jobid-wrapper" class="pt-2 border-t border-gray-800 flex items-center justify-between text-xs font-mono text-gray-400">
+                                    <span class="truncate max-w-[200px] sm:max-w-xs" id="res-jobid">Job ID: --</span>
+                                    <button onclick="copyJobId()" class="text-neon-500 hover:underline ml-2 flex-shrink-0">Copy ID</button>
+                                </div>
+                            </div>
+
+                            <!-- Join Action Buttons -->
+                            <div class="flex flex-col sm:flex-row items-center gap-3">
+                                <a 
+                                    id="res-join-protocol" 
+                                    href="#" 
+                                    class="w-full sm:flex-1 py-3.5 px-6 rounded-xl bg-neon-500 hover:bg-emerald-400 text-black font-extrabold text-center text-sm tracking-wide shadow-neon-btn transition-all duration-200 flex items-center justify-center space-x-2"
+                                >
+                                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                                    <span>LAUNCH & JOIN GAME</span>
+                                </a>
+
+                                <a 
+                                    id="res-game-page" 
+                                    href="#" 
+                                    target="_blank" 
+                                    rel="noopener" 
+                                    class="w-full sm:w-auto py-3.5 px-5 rounded-xl glass-panel hover:bg-surface text-gray-200 text-sm font-semibold text-center border border-gray-700 transition-all flex items-center justify-center space-x-2"
+                                >
+                                    <span>Place Page</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Case B: User NOT Playing -->
+                        <div id="game-details-inactive" class="hidden space-y-4">
+                            <div class="p-6 rounded-2xl bg-surface/50 border border-gray-800 text-center sm:text-left space-y-2">
+                                <div class="flex items-center justify-center sm:justify-start space-x-2 text-amber-400">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    <span class="font-bold text-sm">User is not currently playing</span>
+                                </div>
+                                <p class="text-xs text-gray-400 leading-relaxed">
+                                    This player is currently offline, browsing the Roblox website, or editing in Roblox Studio. You can only join active live experiences.
+                                </p>
+                            </div>
+                        </div>
+
+                        <!-- Case C: Privacy Restriction Notice -->
+                        <div id="privacy-notice-box" class="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/20 text-xs text-gray-300 space-y-1">
+                            <div class="font-semibold text-emerald-400 flex items-center space-x-1.5">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 002-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                <span>Roblox Privacy Setting Notice</span>
+                            </div>
+                            <p class="text-gray-400">
+                                Joining requires the target player to have their Roblox privacy setting <strong class="text-white">"Who can join me in experiences?"</strong> set to <em>Everyone</em> or <em>Friends/Followers</em>.
+                            </p>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Banner -->
+            <div id="state-error" class="hidden glass-panel rounded-3xl p-8 border-red-500/30 text-center space-y-3">
+                <div class="w-12 h-12 rounded-full bg-red-950/80 text-red-400 flex items-center justify-center mx-auto border border-red-500/30">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h4 id="error-title" class="text-lg font-bold text-white">User Not Found</h4>
+                <p id="error-desc" class="text-xs text-gray-400 max-w-md mx-auto">Please verify the username spelling and try again.</p>
+            </div>
+
+        </section>
+
+        <!-- Information & Features Cards Section -->
+        <section id="how-it-works" class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
+            
+            <div class="glass-panel p-6 rounded-2xl space-y-3 hover:border-emerald-500/30 transition-all">
+                <div class="w-10 h-10 rounded-xl bg-surface flex items-center justify-center text-neon-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                </div>
+                <h3 class="text-base font-bold text-white">1. Live Telemetry</h3>
+                <p class="text-xs text-gray-400 leading-relaxed">
+                    Directly queries official Roblox endpoints via high-speed API proxies to retrieve real-time presence data and server identifiers.
+                </p>
+            </div>
+
+            <div class="glass-panel p-6 rounded-2xl space-y-3 hover:border-emerald-500/30 transition-all">
+                <div class="w-10 h-10 rounded-xl bg-surface flex items-center justify-center text-neon-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <h3 class="text-base font-bold text-white">2. Direct Protocol Launch</h3>
+                <p class="text-xs text-gray-400 leading-relaxed">
+                    Generates native <code class="text-neon-500">roblox://</code> deep links to bypass web browsing and launch directly into your target's server.
+                </p>
+            </div>
+
+            <div class="glass-panel p-6 rounded-2xl space-y-3 hover:border-emerald-500/30 transition-all">
+                <div class="w-10 h-10 rounded-xl bg-surface flex items-center justify-center text-neon-500">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 002-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </div>
+                <h3 class="text-base font-bold text-white">3. Privacy Respectful</h3>
+                <p class="text-xs text-gray-400 leading-relaxed">
+                    Operates in full compliance with Roblox security guidelines. Only publicly exposed player sessions can be joined.
+                </p>
+            </div>
+
+        </section>
+
+        <!-- Privacy & Settings Guide -->
+        <section id="privacy-guide" class="glass-panel rounded-3xl p-6 sm:p-8 space-y-6">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-gray-800 pb-4">
+                <div>
+                    <h3 class="text-xl font-bold text-white">How to enable "Join Me" settings in Roblox</h3>
+                    <p class="text-xs text-gray-400">Ensure your target account or your own profile allows friends/followers to join games.</p>
+                </div>
+                <a href="https://www.roblox.com/my/account#!/privacy" target="_blank" rel="noopener" class="px-4 py-2 rounded-xl bg-surface hover:bg-gray-800 text-xs font-semibold text-neon-500 border border-emerald-500/30 transition-all">
+                    Open Roblox Privacy Settings ↗
+                </a>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                <div class="p-4 rounded-xl bg-surface/50 border border-gray-800 space-y-1.5">
+                    <div class="font-bold text-white">Step 1: Open Settings</div>
+                    <p class="text-gray-400">Log in to Roblox and open Gear Icon → Settings → Privacy tab.</p>
+                </div>
+                <div class="p-4 rounded-xl bg-surface/50 border border-gray-800 space-y-1.5">
+                    <div class="font-bold text-white">Step 2: Who Can Join Me?</div>
+                    <p class="text-gray-400">Scroll to "Other Settings" and locate <strong>Who can join me in experiences?</strong></p>
+                </div>
+                <div class="p-4 rounded-xl bg-surface/50 border border-gray-800 space-y-1.5">
+                    <div class="font-bold text-white">Step 3: Select Everyone</div>
+                    <p class="text-gray-400">Set it to <strong>Everyone</strong> or <strong>Friends & Followers</strong> to allow session detection.</p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="w-full border-t border-gray-800/80 glass-panel mt-16 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 text-center space-y-3">
+            <div class="flex items-center justify-center space-x-2">
+                <span class="font-bold text-sm text-white">USER <span class="text-neon-500">AND JOIN</span></span>
+                <span class="text-gray-600">•</span>
+                <span class="text-xs text-gray-400">Roblox Session Finder</span>
+            </div>
+            <p class="text-xs text-gray-500 max-w-xl mx-auto leading-relaxed">
+                User And Join is an independent web tool and is not affiliated, endorsed, associated, or connected with Roblox Corporation. All Roblox names, logos, and trademarks belong to their respective holders.
+            </p>
+            <p class="text-[11px] text-gray-600">
+                &copy; <span id="year-span"></span> User And Join. All rights reserved.
+            </p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Set dynamic footer year
+        document.getElementById('year-span').textContent = new Date().getFullYear();
+
+        // Application State & Endpoints Configuration
+        const CONFIG = {
+            API_BASE: 'https://users.roproxy.com/v1',
+            PRESENCE_API: 'https://presence.roproxy.com/v1',
+            THUMBNAIL_API: 'https://thumbnails.roproxy.com/v1',
+            GAMES_API: 'https://games.roproxy.com/v1',
+            LOCAL_STORAGE_KEY: 'user_and_join_recent_searches'
+        };
+
+        // DOM Element Cache
+        const elInput = document.getElementById('username-input');
+        const elClearBtn = document.getElementById('clear-btn');
+        const elJoinBtn = document.getElementById('join-btn');
+        const elRecentChips = document.getElementById('recent-chips');
+        const elRecentContainer = document.getElementById('recent-searches-container');
+
+        // State Containers
+        const stateIdle = document.getElementById('state-idle');
+        const stateLoading = document.getElementById('state-loading');
+        const stateResult = document.getElementById('state-result');
+        const stateError = document.getElementById('state-error');
+
+        // Result Card Elements
+        const resAvatar = document.getElementById('res-avatar');
+        const resStatusDot = document.getElementById('res-status-dot');
+        const resDisplayName = document.getElementById('res-displayname');
+        const resUsername = document.getElementById('res-username');
+        const resUserId = document.getElementById('res-userid');
+        const resPresenceBadge = document.getElementById('res-presence-badge');
+        const resProfileLink = document.getElementById('res-profile-link');
+        const resVerifiedBadge = document.getElementById('res-verified-badge');
+        const resGameDetailsActive = document.getElementById('game-details-active');
+        const resGameDetailsInactive = document.getElementById('game-details-inactive');
+        const resGameName = document.getElementById('res-gamename');
+        const resPlaceId = document.getElementById('res-placeid');
+        const resJobId = document.getElementById('res-jobid');
+        const resJoinProtocol = document.getElementById('res-join-protocol');
+        const resGamePage = document.getElementById('res-game-page');
+        const resStatusGlowBar = document.getElementById('status-glow-bar');
+
+        let currentJobId = '';
+
+        // Input Listeners
+        elInput.addEventListener('input', () => {
+            if (elInput.value.trim().length > 0) {
+                elClearBtn.classList.remove('hidden');
+            } else {
+                elClearBtn.classList.add('hidden');
+            }
+        });
+
+        elClearBtn.addEventListener('click', () => {
+            elInput.value = '';
+            elClearBtn.classList.add('hidden');
+            elInput.focus();
+        });
+
+        elInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                handleSearch();
+            }
+        });
+
+        // Load Recents on Init
+        renderRecentSearches();
+
+        // Main Search Orchestrator
+        async function handleSearch(targetUser = null) {
+            const query = targetUser || elInput.value.trim();
+            if (!query) {
+                showToast('Please enter a valid Roblox Username or User ID', 'warning');
+                return;
+            }
+
+            // UI State Transition: Loading
+            setViewState('loading');
+
+            try {
+                // Step 1: Resolve User Info (Username or ID)
+                let userData = null;
+                if (/^\d+$/.test(query)) {
+                    // Query is numeric ID
+                    userData = await fetchUserById(query);
+                } else {
+                    // Query is Username
+                    userData = await fetchUserByUsername(query);
+                }
+
+                if (!userData) {
+                    showError('User Not Found', `No Roblox account matches "${query}". Please check the spelling.`);
+                    return;
+                }
+
+                // Save to local storage
+                saveRecentSearch(userData.name);
+
+                // Step 2: Fetch Avatar Thumbnail & User Presence concurrently
+                const [avatarUrl, presenceData] = await Promise.all([
+                    fetchAvatarHeadshot(userData.id),
+                    fetchUserPresence(userData.id)
+                ]);
+
+                // Step 3: Populate Result View
+                populateResultCard(userData, avatarUrl, presenceData);
+
+                // UI State Transition: Result
+                setViewState('result');
+
+            } catch (err) {
+                console.error('Search failed:', err);
+                showError('Network Error', 'Failed to communicate with Roblox servers. Please try again in a few seconds.');
+            }
+        }
+
+        // Fetch User Info by Username
+        async function fetchUserByUsername(username) {
+            try {
+                const res = await fetch(`${CONFIG.API_BASE}/usernames/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ usernames: [username], excludeBannedUsers: true })
+                });
+
+                if (!res.ok) return null;
+                const data = await res.json();
+                if (data.data && data.data.length > 0) {
+                    const u = data.data[0];
+                    return {
+                        id: u.id,
+                        name: u.name,
+                        displayName: u.displayName || u.name,
+                        hasVerifiedBadge: u.hasVerifiedBadge || false
+                    };
+                }
+                return null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Fetch User Info by Numeric ID
+        async function fetchUserById(userId) {
+            try {
+                const res = await fetch(`${CONFIG.API_BASE}/users/${userId}`);
+                if (!res.ok) return null;
+                const u = await res.json();
+                return {
+                    id: u.id,
+                    name: u.name,
+                    displayName: u.displayName || u.name,
+                    hasVerifiedBadge: u.hasVerifiedBadge || false
+                };
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Fetch Avatar Headshot Thumbnail
+        async function fetchAvatarHeadshot(userId) {
+            try {
+                const res = await fetch(`${CONFIG.THUMBNAIL_API}/users/avatar-headshot?userIds=${userId}&size=150x150&format=Png&isCircular=false`);
+                if (!res.ok) return getDefaultAvatar();
+                const data = await res.json();
+                if (data.data && data.data.length > 0) {
+                    return data.data[0].imageUrl;
+                }
+                return getDefaultAvatar();
+            } catch (e) {
+                return getDefaultAvatar();
+            }
+        }
+
+        // Fetch Presence Status
+        async function fetchUserPresence(userId) {
+            try {
+                const res = await fetch(`${CONFIG.PRESENCE_API}/presence/users`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userIds: [userId] })
+                });
+
+                if (!res.ok) return { userPresenceType: 0 };
+                const data = await res.json();
+                if (data.userPresences && data.userPresences.length > 0) {
+                    return data.userPresences[0];
+                }
+                return { userPresenceType: 0 };
+            } catch (e) {
+                return { userPresenceType: 0 };
+            }
+        }
+
+        // Fetch Game Experience Title from Place ID
+        async function fetchGameTitle(placeId) {
+            if (!placeId) return 'Roblox Experience';
+            try {
+                const res = await fetch(`${CONFIG.GAMES_API}/games/multiget-place-details?placeIds=${placeId}`);
+                if (!res.ok) return `Place #${placeId}`;
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) {
+                    return data[0].name || `Place #${placeId}`;
+                }
+                return `Place #${placeId}`;
+            } catch (e) {
+                return `Place #${placeId}`;
+            }
+        }
+
+        // Populate Dashboard UI
+        async function populateResultCard(user, avatarUrl, presence) {
+            resDisplayName.textContent = user.displayName;
+            resUsername.textContent = `@${user.name}`;
+            resUserId.textContent = `ID: ${user.id}`;
+            resAvatar.src = avatarUrl;
+            resProfileLink.href = `https://www.roblox.com/users/${user.id}/profile`;
+
+            if (user.hasVerifiedBadge) {
+                resVerifiedBadge.classList.remove('hidden');
+            } else {
+                resVerifiedBadge.classList.add('hidden');
+            }
+
+            // Presence Types:
+            // 0: Offline
+            // 1: Online (Website)
+            // 2: InGame
+            // 3: InStudio
+            const presenceType = presence.userPresenceType || 0;
+
+            if (presenceType === 2) {
+                // User IS playing a game
+                resStatusDot.className = 'absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-surface bg-neon-500 animate-radar';
+                resPresenceBadge.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider inline-flex items-center space-x-1.5 bg-emerald-950 text-neon-500 border border-emerald-500/30';
+                resPresenceBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-neon-500 animate-ping"></span><span>PLAYING IN-GAME</span>`;
+                resStatusGlowBar.className = 'absolute top-0 left-0 right-0 h-1.5 bg-neon-500 shadow-neon-glow';
+
+                resGameDetailsActive.classList.remove('hidden');
+                resGameDetailsInactive.classList.add('hidden');
+
+                const placeId = presence.placeId || presence.rootPlaceId || '';
+                const gameId = presence.gameId || ''; // Server Job ID
+                currentJobId = gameId;
+
+                resPlaceId.textContent = placeId ? `Place ID: ${placeId}` : 'Place ID: Private/Hidden';
+                resJobId.textContent = gameId ? `Job ID: ${gameId}` : 'Job ID: Restricted';
+
+                // Fetch real game title
+                if (placeId) {
+                    resGameName.textContent = 'Loading game title...';
+                    const gameTitle = await fetchGameTitle(placeId);
+                    resGameName.textContent = gameTitle;
+                } else {
+                    resGameName.textContent = 'Roblox Experience';
+                }
+
+                // Roblox Protocol Direct Launch Link
+                if (placeId) {
+                    let protocolUrl = `roblox://placeId=${placeId}`;
+                    if (gameId) protocolUrl += `&gameInstanceId=${gameId}`;
+                    resJoinProtocol.href = protocolUrl;
+                    resGamePage.href = `https://www.roblox.com/games/${placeId}`;
+                } else {
+                    resJoinProtocol.href = `https://www.roblox.com/users/${user.id}/profile`;
+                    resGamePage.href = `https://www.roblox.com/users/${user.id}/profile`;
+                }
+
+            } else {
+                // User is NOT playing a game
+                resGameDetailsActive.classList.add('hidden');
+                resGameDetailsInactive.classList.remove('hidden');
+
+                if (presenceType === 1) {
+                    // Online on website
+                    resStatusDot.className = 'absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-surface bg-blue-500';
+                    resPresenceBadge.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider inline-flex items-center space-x-1.5 bg-blue-950 text-blue-400 border border-blue-500/30';
+                    resPresenceBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-blue-400"></span><span>ONLINE (WEBSITE)</span>`;
+                    resStatusGlowBar.className = 'absolute top-0 left-0 right-0 h-1.5 bg-blue-500';
+                } else if (presenceType === 3) {
+                    // In Studio
+                    resStatusDot.className = 'absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-surface bg-orange-500';
+                    resPresenceBadge.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider inline-flex items-center space-x-1.5 bg-orange-950 text-orange-400 border border-orange-500/30';
+                    resPresenceBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-orange-400"></span><span>IN STUDIO</span>`;
+                    resStatusGlowBar.className = 'absolute top-0 left-0 right-0 h-1.5 bg-orange-500';
+                } else {
+                    // Offline
+                    resStatusDot.className = 'absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-4 border-surface bg-gray-500';
+                    resPresenceBadge.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider inline-flex items-center space-x-1.5 bg-gray-800 text-gray-400';
+                    resPresenceBadge.innerHTML = `<span class="w-2 h-2 rounded-full bg-gray-400"></span><span>OFFLINE</span>`;
+                    resStatusGlowBar.className = 'absolute top-0 left-0 right-0 h-1.5 bg-gray-700';
+                }
+            }
+        }
+
+        // Copy Server Job ID to Clipboard
+        function copyJobId() {
+            if (!currentJobId) {
+                showToast('No active Job ID to copy', 'warning');
+                return;
+            }
+            navigator.clipboard.writeText(currentJobId).then(() => {
+                showToast('Server Job ID copied to clipboard!', 'success');
+            }).catch(() => {
+                showToast('Failed to copy Job ID', 'error');
+            });
+        }
+
+        // Manage LocalStorage Recent Searches
+        function saveRecentSearch(username) {
+            let recents = getRecentSearches();
+            recents = recents.filter(u => u.toLowerCase() !== username.toLowerCase());
+            recents.unshift(username);
+            if (recents.length > 5) recents.pop();
+            localStorage.setItem(CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(recents));
+            renderRecentSearches();
+        }
+
+        function getRecentSearches() {
+            try {
+                const stored = localStorage.getItem(CONFIG.LOCAL_STORAGE_KEY);
+                return stored ? JSON.parse(stored) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function renderRecentSearches() {
+            const recents = getRecentSearches();
+            if (recents.length === 0) {
+                elRecentContainer.classList.add('hidden');
+                return;
+            }
+            elRecentContainer.classList.remove('hidden');
+            elRecentChips.innerHTML = '';
+            recents.forEach(name => {
+                const btn = document.createElement('button');
+                btn.className = 'px-2.5 py-1 rounded-full bg-surface hover:bg-emerald-950 hover:text-neon-500 border border-gray-800 transition-all text-xs';
+                btn.textContent = name;
+                btn.onclick = () => {
+                    elInput.value = name;
+                    elClearBtn.classList.remove('hidden');
+                    handleSearch(name);
+                };
+                elRecentChips.appendChild(btn);
+            });
+        }
+
+        // View State Switcher
+        function setViewState(state) {
+            stateIdle.classList.add('hidden');
+            stateLoading.classList.add('hidden');
+            stateResult.classList.add('hidden');
+            stateError.classList.add('hidden');
+
+            if (state === 'idle') stateIdle.classList.remove('hidden');
+            if (state === 'loading') stateLoading.classList.remove('hidden');
+            if (state === 'result') stateResult.classList.remove('hidden');
+            if (state === 'error') stateError.classList.remove('hidden');
+        }
+
+        function showError(title, message) {
+            document.getElementById('error-title').textContent = title;
+            document.getElementById('error-desc').textContent = message;
+            setViewState('error');
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+
+            let borderCol = 'border-emerald-500/40 text-emerald-300';
+            if (type === 'warning') borderCol = 'border-amber-500/40 text-amber-300';
+            if (type === 'error') borderCol = 'border-red-500/40 text-red-300';
+
+            toast.className = `glass-panel ${borderCol} px-4 py-3 rounded-xl shadow-lg text-xs font-semibold flex items-center space-x-2 pointer-events-auto transform translate-y-2 opacity-0 transition-all duration-300`;
+            toast.innerHTML = `
+                <span class="w-2 h-2 rounded-full bg-current"></span>
+                <span>${message}</span>
+            `;
+
+            container.appendChild(toast);
+
+            // Animate In
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            // Remove Toast
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function getDefaultAvatar() {
+            return 'https://placehold.co/150x150/111820/00FF87?text=Roblox';
+        }
+    </script>
+</body>
+</html>
